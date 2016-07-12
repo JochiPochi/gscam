@@ -4,9 +4,10 @@ project(gscam)
 
 # System Dependencies
 find_package(PkgConfig)
-pkg_check_modules(GSTREAMER REQUIRED gstreamer-0.10)
-pkg_check_modules(GST_APP REQUIRED gstreamer-app-0.10)
 
+  message(STATUS "gst 1.0")
+  pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+  pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
 if(USE_ROSBUILD)
   # Use rosbuild
   include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
