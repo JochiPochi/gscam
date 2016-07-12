@@ -127,7 +127,8 @@ namespace gscam {
 
     // Create RGB sink
     sink_ = gst_element_factory_make("appsink",NULL);
-    GstCaps * caps = NULL;
+    GstCaps * caps = gst_app_sink_get_caps(GST_APP_SINK(sink_));
+
     if (image_encoding_ == sensor_msgs::image_encodings::RGB8) {
         caps = gst_caps_new_simple("video/x-raw-rgb", NULL); 
     } else if (image_encoding_ == sensor_msgs::image_encodings::MONO8) {
@@ -246,7 +247,8 @@ namespace gscam {
     ROS_INFO("Started stream.");
 
     // Poll the data as fast a spossible
-    while(ros::ok()) {
+    while(ros::ok()) 
+    {
       // This should block until a new frame is awake, this way, we'll run at the
       // actual capture framerate of the device.
       // ROS_DEBUG("Getting data...");
@@ -276,16 +278,17 @@ namespace gscam {
 
       // Get the image width and height
       GstPad* pad = gst_element_get_static_pad(sink_, "sink");
-      const GstCaps *caps = gst_pad_get_negotiated_caps(pad);
+      const GstCaps *caps = gst_pad_get_current_caps(pad);
       GstStructure *structure = gst_caps_get_structure(caps,0);
       gst_structure_get_int(structure,"width",&width_);
       gst_structure_get_int(structure,"height",&height_);
 
       // Update header information
+      sensor_msgs::CameraInfo cur_cinfo = camera_info_manager_.getCameraInfo();
       sensor_msgs::CameraInfoPtr cinfo;
-      cinfo.reset(new sensor_msgs::CameraInfo(camera_info_manager_.getCameraInfo()));
+      cinfo.reset(new sensor_msgs::CameraInfo(cur_cinfo));
       if (use_gst_timestamps_) {
-          cinfo->header.stamp = ros::Time(GST_TIME_AS_USECONDS(buf->timestamp+bt)/1e6+time_offset_);
+          cinfo->header.stamp = ros::Time(GST_TIME_AS_USECONDS(buf->pts+bt)/1e6+time_offset_);
       } else {
           cinfo->header.stamp = ros::Time::now();
       }
@@ -295,8 +298,8 @@ namespace gscam {
           sensor_msgs::CompressedImagePtr img(new sensor_msgs::CompressedImage());
           img->header = cinfo->header;
           img->format = "jpeg";
-          img->data.resize(buf->size);
-          std::copy(buf->data, (buf->data)+(buf->size),
+          img->data.resize(buf_size);
+          std::copy(buf_data, (buf_data)+(buf_size),
                   img->data.begin());
           jpeg_pub_.publish(img);
           cinfo_pub_.publish(cinfo);
@@ -307,10 +310,10 @@ namespace gscam {
               ? width_ * height_ * 3
               : width_ * height_;
 
-          if (buf->size < expected_frame_size) {
+          if (buf_size < expected_frame_size) {
               ROS_WARN_STREAM( "GStreamer image buffer underflow: Expected frame to be "
                       << expected_frame_size << " bytes but got only "
-                      << (buf->size) << " bytes. (make sure frames are correctly encoded)");
+                      << (buf_size) << " bytes. (make sure frames are correctly encoded)");
           }
 
           // Construct Image message
@@ -334,8 +337,8 @@ namespace gscam {
               img->step = width_;
           }
           std::copy(
-                  buf->data,
-                  (buf->data)+(buf->size),
+                  buf_data,
+                  (buf_data)+(buf_size),
                   img->data.begin());
 
           // Publish the image/info
@@ -343,7 +346,6 @@ namespace gscam {
       }
 
       // Release the buffer
-      gst_buffer_unref(buf);
 
       ros::spinOnce();
     }
