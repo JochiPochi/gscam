@@ -135,11 +135,11 @@ namespace gscam {
             "format", G_TYPE_STRING, "RGB",
             NULL); 
     } else if (image_encoding_ == sensor_msgs::image_encodings::MONO8) {
-        caps = gst_caps_new_simple( "video/x-raw", 
-            "format", G_TYPE_STRING, "GRAY8",
-            NULL); 
+        //caps = gst_caps_new_simple( "video/x-raw", 
+        //    "format", G_TYPE_STRING, "GRAY8",
+        //    NULL); 
     } else if (image_encoding_ == "jpeg") {
-        caps = gst_caps_new_simple("image/jpeg", NULL, NULL);
+        //caps = gst_caps_new_simple("image/jpeg", NULL, NULL);
     }
 
     gst_app_sink_set_caps(GST_APP_SINK(sink_), caps);
@@ -210,8 +210,8 @@ namespace gscam {
 
     // Create ROS camera interface
     if (image_encoding_ == "jpeg") {
-        jpeg_pub_ = nh_.advertise<sensor_msgs::CompressedImage>("camera/image_raw/compressed",1);
-        cinfo_pub_ = nh_.advertise<sensor_msgs::CameraInfo>("camera/camera_info",1);
+        //jpeg_pub_ = nh_.advertise<sensor_msgs::CompressedImage>("camera/image_raw/compressed",1);
+        //cinfo_pub_ = nh_.advertise<sensor_msgs::CameraInfo>("camera/camera_info",1);
     } else {
         camera_pub_ = image_transport_.advertiseCamera("camera/image_raw", 1);
     }
@@ -312,14 +312,14 @@ namespace gscam {
       // ROS_INFO("Image time stamp: %.3f",cinfo->header.stamp.toSec());
       cinfo->header.frame_id = frame_id_;
       if (image_encoding_ == "jpeg") {
-          sensor_msgs::CompressedImagePtr img(new sensor_msgs::CompressedImage());
-          img->header = cinfo->header;
-          img->format = "jpeg";
-          img->data.resize(buf_size);
-          std::copy(buf_data, (buf_data)+(buf_size),
-                  img->data.begin());
-          jpeg_pub_.publish(img);
-          cinfo_pub_.publish(cinfo);
+          //sensor_msgs::CompressedImagePtr img(new sensor_msgs::CompressedImage());
+          //img->header = cinfo->header;
+          //img->format = "jpeg";
+          //img->data.resize(buf_size);
+          //std::copy(buf_data, (buf_data)+(buf_size),
+          //        img->data.begin());
+          //jpeg_pub_.publish(img);
+          //cinfo_pub_.publish(cinfo);
       } else {
           // Complain if the returned buffer is smaller than we expect
           const unsigned int expected_frame_size =
@@ -341,7 +341,7 @@ namespace gscam {
           // Image data and metadata
           img->width = width_;
           img->height = height_;
-          img->encoding = image_encoding_;
+          //img->encoding = image_encoding_;
           img->is_bigendian = false;
           img->data.resize(expected_frame_size);
 
